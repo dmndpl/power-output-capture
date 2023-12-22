@@ -1,11 +1,18 @@
 import cv2
 
+SECONDS_TO_SKIP = 5
+
+# TODO print to log
 class VideoCapture():
 
     # Variables to store the coordinates of the selected ROI
     roi_selected = False
     roi_start = (0, 0)
     roi_end = (0, 0)
+    cap = None
+    current_frame = 0
+    total_frames = None
+    fps = None
 
     def __init__(self, path, roi_start=None, roi_end=None):
         self.path = path
@@ -73,6 +80,28 @@ class VideoCapture():
         # Release resources and close windows
         cap.release()
         cv2.destroyAllWindows()
+
+    def read_frame_local(self, seconds_to_skip=SECONDS_TO_SKIP):
+        if not cap:
+            self.cap = cv2.VideoCapture('rec_2023-12-17_18-02.mp4')
+            if not cap.isOpened():
+                print("Error opening video file")
+                exit()
+
+            self.total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            self.fps = cap.get(cv2.CAP_PROP_FPS)
+        
+        if self.current_frame < self.total_frames:
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+            ret, frame = self.cap.read()
+            if ret:
+                self.current_frame += self.fps * seconds_to_skip
+                return frame # TODO apply crop
+        else:
+            self.cap.release()
+            return None
+
+    
 
 if __name__ == "__main__":
     vc = VideoCapture(path='rec_2023-12-17_18-02.mp4')
