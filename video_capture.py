@@ -1,8 +1,10 @@
 import cv2
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 SECONDS_TO_SKIP = 5
 
-# TODO print to log
 class VideoCapture():
 
     # Variables to store the coordinates of the selected ROI
@@ -19,6 +21,7 @@ class VideoCapture():
 
         if not roi_start or not roi_end:
             self.roi_selected = False
+            logging.info("Init cropping wizard")
             self._save_crop_factor()
         else:
             self.roi_start, self.roi_end, self.roi_selected = roi_start, roi_end, True
@@ -34,13 +37,12 @@ class VideoCapture():
             elif event == cv2.EVENT_LBUTTONUP:
                 self.roi_end = (x, y)
                 self.roi_selected = True
-
         # Open the video file
         cap = cv2.VideoCapture(self.path)
 
         # Check if the file is opened successfully
         if not cap.isOpened():
-            print("Error opening video file")
+            logging.exception("Error opening video file")
             exit()
 
         # Read the first frame
@@ -75,6 +77,7 @@ class VideoCapture():
                 cv2.imshow('Selected ROI', selected_image)
                 cv2.waitKey(0)  # Wait for any key press before closing the ROI window
                 cv2.destroyWindow('Selected ROI')
+                logging.info("Crop selected")
                 break
 
         # Release resources and close windows
@@ -83,15 +86,19 @@ class VideoCapture():
 
     def read_frame_local(self, seconds_to_skip=SECONDS_TO_SKIP):
         if not self.cap:
-            self.cap = cv2.VideoCapture('rec_2023-12-17_18-02.mp4')
+            logging.info("Starting video capture")
+            self.cap = cv2.VideoCapture(self.path)
             if not self.cap.isOpened():
-                print("Error opening video file")
+                logging.exception("Error opening video file")
                 exit()
 
             self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
             self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+
+            self.info("Video capture has a total of %s frames at %s frames per second", self.total_frames, self.fps)
         
         if self.current_frame < self.total_frames:
+            logging.info("Reading frame %s", self.current_frame)
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.cap.read()
             if ret:
@@ -100,9 +107,11 @@ class VideoCapture():
                 x2, y2 = max(self.roi_start[0], self.roi_end[0]), max(self.roi_start[1], self.roi_end[1])
                 return frame[y1:y2, x1:x2]
             else:
+                logging.info("Unable to read frame")
                 self.cap.release()
                 return None
         else:
+            logging.info("End of video")
             self.cap.release()
             return None
 
@@ -110,5 +119,5 @@ class VideoCapture():
 
 if __name__ == "__main__":
     vc = VideoCapture(path='rec_2023-12-17_18-02.mp4')
-    print(vc.roi_start)
-    print(vc.roi_end)
+    logging.debug(vc.roi_start)
+    logging.debug(vc.roi_end)
