@@ -96,7 +96,9 @@ class VideoCapture():
             ret, frame = self.cap.read()
             if ret:
                 self.current_frame += self.fps * seconds_to_skip
-                return frame # TODO apply crop
+                x1, y1 = min(self.roi_start[0], self.roi_end[0]), min(self.roi_start[1], self.roi_end[1])
+                x2, y2 = max(self.roi_start[0], self.roi_end[0]), max(self.roi_start[1], self.roi_end[1])
+                return frame[y1:y2, x1:x2]
         else:
             self.cap.release()
             return None

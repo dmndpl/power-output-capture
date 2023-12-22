@@ -16,27 +16,19 @@ IMAGE_CAPTURE_INTERVAL = 1 # 6 in seconds
 NUM_READINGS_PER_BURST = 1 # 10
 NUM_BURSTS_PER_HOUR = 1
 
-# TODO find a way to intuitively pass these at runtime <> parameterize
-# Coordinates of the top-left and bottom-right corners of the ROI
-ROI_TOP_LEFT = (110,180)
-ROI_BOTTOM_RIGHT = (320,280)
-
 SECONDS_TO_SKIP = 5
 
 # Initialize the Google Cloud Vision API client
 client = vision_v1.ImageAnnotatorClient.from_service_account_file(CREDS_PATH)
 
 def extract_digits(image, crop=True):
-    # Crop the frame to the region of interest
-    roi = image[ROI_TOP_LEFT[1]:ROI_BOTTOM_RIGHT[1], ROI_TOP_LEFT[0]:ROI_BOTTOM_RIGHT[0]] if crop else image
-     
-    # Check if the cropped image has a valid size
-    if roi.shape[0] > 0 and roi.shape[1] > 0:
+    # Check if the image has a valid size
+    if image.shape[0] > 0 and image.shape[1] > 0:
         # TODO add debug logging and flag, to enable these for testing purposes
         # Display the cropped image for visual verification
-        # cv2.imshow("Cropped Image", roi)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.imshow("Cropped Image", image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
         # Convert the image to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -51,6 +43,8 @@ def extract_digits(image, crop=True):
         # Extract the detected text
         texts = response.text_annotations
         extracted_digits = [text.description for text in texts]
+
+        print(extracted_digits)
 
         return extracted_digits
     else:
@@ -101,14 +95,13 @@ def extract_from_local(extraction):
         if ret:
             # Display the frame
             #cv2.imshow('Frame', frame)
-            print(frame_count)
             frame_count += frames_to_skip
 
             # Extract digits from the frame
-            digits = extraction(frame, crop=False)
+            digits = extraction(frame, crop=True)
 
             # Print or store the digits as needed
-            print(parse_text(digits[-2:]))
+            #print(parse_text(digits[-2:]))
 
             # Press 'q' to exit the video
             if cv2.waitKey(25) & 0xFF == ord('q'):
@@ -207,12 +200,13 @@ def parse_text(text):
     return text
     # TODO there's an edge case where it only sees the Pro, not the whole url, so we end up extracting the PRO instead of the value
     if text[0] == 'https://ipwebo.am/pro':
-
         return text[1]
 
     return text[0]
+
 def main():
-    extract_from_local(extract_digits)
+    #extract_from_local(extract_digits)
+    check_crop()
     # result = stream_to_rows(data_list)
     # for row in result:
     #     print(row)
