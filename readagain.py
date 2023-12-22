@@ -3,6 +3,7 @@ import requests
 import os
 from io import BytesIO
 from PIL import Image
+from video_capture import VideoCapture
 from google.cloud import vision_v1
 from google.cloud.vision_v1 import types
 
@@ -21,15 +22,9 @@ SECONDS_TO_SKIP = 5
 # Initialize the Google Cloud Vision API client
 client = vision_v1.ImageAnnotatorClient.from_service_account_file(CREDS_PATH)
 
-def extract_digits(image, crop=True):
+def extract_digits(image):
     # Check if the image has a valid size
     if image.shape[0] > 0 and image.shape[1] > 0:
-        # TODO add debug logging and flag, to enable these for testing purposes
-        # Display the cropped image for visual verification
-        cv2.imshow("Cropped Image", image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
         # Convert the image to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -43,8 +38,6 @@ def extract_digits(image, crop=True):
         # Extract the detected text
         texts = response.text_annotations
         extracted_digits = [text.description for text in texts]
-
-        print(extracted_digits)
 
         return extracted_digits
     else:
@@ -70,48 +63,6 @@ def extract_from_stream(extraction):
 
     # Release the video capture object
     cap.release()
-
-def extract_from_local(extraction):
-    # Open the video file
-    cap = cv2.VideoCapture('rec_2023-12-17_18-02.mp4')
-
-    # Check if the file is opened successfully
-    if not cap.isOpened():
-        print("Error opening video file")
-        exit()
-
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-
-    frames_to_skip = fps * SECONDS_TO_SKIP
-    frame_count = 0
-    # Read and display frames until the video is over or manually stopped
-    while cap.isOpened() and frame_count < total_frames:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
-        ret, frame = cap.read()
-
-        # If a frame is read properly, ret will be True
-        if ret:
-            # Display the frame
-            #cv2.imshow('Frame', frame)
-            frame_count += frames_to_skip
-
-            # Extract digits from the frame
-            digits = extraction(frame, crop=True)
-
-            # Print or store the digits as needed
-            #print(parse_text(digits[-2:]))
-
-            # Press 'q' to exit the video
-            if cv2.waitKey(25) & 0xFF == ord('q'):
-                break
-        else:
-            break
-
-    # Release the video capture object and close windows
-    cap.release()
-    cv2.destroyAllWindows()
 
 data_list = [
     "17/12/2823",
@@ -205,11 +156,14 @@ def parse_text(text):
     return text[0]
 
 def main():
-    #extract_from_local(extract_digits)
-    check_crop()
-    # result = stream_to_rows(data_list)
-    # for row in result:
-    #     print(row)
+    vc = VideoCapture(path='rec_2023-12-17_18-02.mp4')
+
+    frame = vc.read_frame_local()
+    while frame is not None:
+        digits = extract_digits(frame)
+        print(digits)
+        frame = vc.read_frame_local()
+
 
 if __name__ == "__main__":
     # TODO Read stream or frames from video, and write result as array somewhere as aprocess

@@ -82,23 +82,26 @@ class VideoCapture():
         cv2.destroyAllWindows()
 
     def read_frame_local(self, seconds_to_skip=SECONDS_TO_SKIP):
-        if not cap:
+        if not self.cap:
             self.cap = cv2.VideoCapture('rec_2023-12-17_18-02.mp4')
-            if not cap.isOpened():
+            if not self.cap.isOpened():
                 print("Error opening video file")
                 exit()
 
-            self.total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.fps = cap.get(cv2.CAP_PROP_FPS)
+            self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            self.fps = self.cap.get(cv2.CAP_PROP_FPS)
         
         if self.current_frame < self.total_frames:
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.cap.read()
             if ret:
                 self.current_frame += self.fps * seconds_to_skip
                 x1, y1 = min(self.roi_start[0], self.roi_end[0]), min(self.roi_start[1], self.roi_end[1])
                 x2, y2 = max(self.roi_start[0], self.roi_end[0]), max(self.roi_start[1], self.roi_end[1])
                 return frame[y1:y2, x1:x2]
+            else:
+                self.cap.release()
+                return None
         else:
             self.cap.release()
             return None
