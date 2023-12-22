@@ -1,0 +1,1 @@
+Given either a locally storred .mp4, or an IP webcam stream, it will use various image to text recognition algorithms to execute a meter reading. It relies on a bunch of credentials served as either local .json files (not present), or environment variables.
