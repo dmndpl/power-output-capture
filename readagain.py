@@ -11,10 +11,12 @@ IP_WEBCAM_URL = os.environ.get("IP_WEBCAM_URL")
 API_KEY = os.environ.get("API_KEY")
 CREDS_PATH = os.environ.get("CREDS_PATH")
 
+# TODO to revisit these
 IMAGE_CAPTURE_INTERVAL = 1 # 6 in seconds
 NUM_READINGS_PER_BURST = 1 # 10
 NUM_BURSTS_PER_HOUR = 1
 
+# TODO find a way to intuitively pass these at runtime <> parameterize
 # Coordinates of the top-left and bottom-right corners of the ROI
 ROI_TOP_LEFT = (110,180)
 ROI_BOTTOM_RIGHT = (320,280)
@@ -30,6 +32,7 @@ def extract_digits(image, crop=True):
      
     # Check if the cropped image has a valid size
     if roi.shape[0] > 0 and roi.shape[1] > 0:
+        # TODO add debug logging and flag, to enable these for testing purposes
         # Display the cropped image for visual verification
         # cv2.imshow("Cropped Image", roi)
         # cv2.waitKey(0)
@@ -184,6 +187,7 @@ def stream_to_rows(stream):
 
     LINE_BREAKS = ["ABR", "ARR"]
 
+    # TODO state machine, to sanitise the values and have the correct values at the correct position as we go.
     for item in stream:
         if start and item not in LINE_BREAKS:
             row.append(item)
@@ -209,5 +213,6 @@ def main():
         print(row)
 
 if __name__ == "__main__":
+    # TODO Read stream or frames from video, and write result as array somewhere as aprocess
+    # TODO Other process reads it and parses it, writes it to another file
     main()
-
