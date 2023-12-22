@@ -7,15 +7,16 @@ class VideoCapture():
     roi_start = (0, 0)
     roi_end = (0, 0)
 
-    def __init__(self, path, is_local=True):
+    def __init__(self, path, roi_start=None, roi_end=None):
         self.path = path
 
-    def get_crop_preferences(self):
-        pass
+        if not roi_start or not roi_end:
+            self.roi_selected = False
+            self._save_crop_factor()
+        else:
+            self.roi_start, self.roi_end, self.roi_selected = roi_start, roi_end, True
 
-
-
-    def save_roi(self):
+    def _save_crop_factor(self):
         # Mouse callback function
         def select_roi(event, x, y, flags, param):
 
@@ -75,6 +76,5 @@ class VideoCapture():
 
 if __name__ == "__main__":
     vc = VideoCapture(path='rec_2023-12-17_18-02.mp4')
-    vc.save_roi()
     print(vc.roi_start)
     print(vc.roi_end)
