@@ -87,11 +87,13 @@ def extract_from_local(extraction):
         exit()
 
     fps = cap.get(cv2.CAP_PROP_FPS)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
 
     frames_to_skip = fps * SECONDS_TO_SKIP
     frame_count = 0
     # Read and display frames until the video is over or manually stopped
-    while cap.isOpened():
+    while cap.isOpened() and frame_count < total_frames:
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
         ret, frame = cap.read()
 
@@ -99,6 +101,7 @@ def extract_from_local(extraction):
         if ret:
             # Display the frame
             #cv2.imshow('Frame', frame)
+            print(frame_count)
             frame_count += frames_to_skip
 
             # Extract digits from the frame
@@ -201,16 +204,18 @@ def stream_to_rows(stream):
     return rows
 
 def parse_text(text):
+    return text
     # TODO there's an edge case where it only sees the Pro, not the whole url, so we end up extracting the PRO instead of the value
     if text[0] == 'https://ipwebo.am/pro':
+
         return text[1]
 
     return text[0]
 def main():
-    #extract_from_local(extract_digits)
-    result = stream_to_rows(data_list)
-    for row in result:
-        print(row)
+    extract_from_local(extract_digits)
+    # result = stream_to_rows(data_list)
+    # for row in result:
+    #     print(row)
 
 if __name__ == "__main__":
     # TODO Read stream or frames from video, and write result as array somewhere as aprocess
