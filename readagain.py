@@ -166,7 +166,7 @@ data_list = [
     "7/12/2923",
     "27/12/2023",
     "18:25",
-    "Pro",
+    "Pro", 
     "096,16",
     "004948",
     "000,64",
@@ -178,16 +178,35 @@ data_list = [
 ]
 
 def stream_to_rows(stream):
-    pass
+    rows = []
+    row = []
+    start = False
+
+    LINE_BREAKS = ["ABR", "ARR"]
+
+    for item in stream:
+        if start and item not in LINE_BREAKS:
+            row.append(item)
+        elif start and item in LINE_BREAKS:
+            rows.append(row)
+            row = []
+        elif not start and item in LINE_BREAKS:
+            start = True
+    # We don't care if item is not ABR and start is False
+
+    return rows
 
 def parse_text(text):
+    # TODO there's an edge case where it only sees the Pro, not the whole url, so we end up extracting the PRO instead of the value
     if text[0] == 'https://ipwebo.am/pro':
         return text[1]
 
     return text[0]
 def main():
     #extract_from_local(extract_digits)
-    stream_to_rows(data_list)
+    result = stream_to_rows(data_list)
+    for row in result:
+        print(row)
 
 if __name__ == "__main__":
     main()
