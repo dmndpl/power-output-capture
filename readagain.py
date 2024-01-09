@@ -29,7 +29,7 @@ def extract_digits(image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Perform OCR using Google Cloud Vision API
-        _, encoded_image = cv2.imencode('.jpg', gray)
+        _, encoded_image = cv2.imencode('.jpg', image)
         content = encoded_image.tobytes()
 
         image = types.Image(content=content)
@@ -156,7 +156,7 @@ def parse_text(text):
     return text[0]
 
 def main():
-    vc = VideoCapture(path='rec_2023-12-17_18-02.mp4')
+    vc = VideoCapture(path='rec_2023-12-23_11-22.mp4')
 
     frame = vc.read_frame_local()
     while frame is not None:

@@ -95,7 +95,7 @@ class VideoCapture():
             self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
             self.fps = self.cap.get(cv2.CAP_PROP_FPS)
 
-            self.info("Video capture has a total of %s frames at %s frames per second", self.total_frames, self.fps)
+            logging.info("Video capture has a total of %s frames at %s frames per second", self.total_frames, self.fps)
         
         if self.current_frame < self.total_frames:
             logging.info("Reading frame %s", self.current_frame)
