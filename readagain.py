@@ -1,6 +1,7 @@
 import cv2
 import requests
 import os
+import pathlib
 from io import BytesIO
 from PIL import Image
 from video_capture import VideoCapture
@@ -36,10 +37,11 @@ def extract_digits(image):
         response = client.text_detection(image=image)
 
         # Extract the detected text
+        print(response)
         texts = response.text_annotations
         extracted_digits = [text.description for text in texts]
 
-        return extracted_digits
+        return extracted_digits, response
     else:
         print("Invalid size for the cropped image. Check ROI coordinates.")
 
@@ -156,13 +158,30 @@ def parse_text(text):
     return text[0]
 
 def main():
-    vc = VideoCapture(path='rec_2023-12-23_11-22.mp4')
+    mp4_files = [file for file in os.listdir() if os.path.isfile(file) and pathlib.Path(file).suffix == '.mp4']
+    for mp4 in mp4_files:
+        vc = VideoCapture(path=mp4)
 
-    frame = vc.read_frame_local()
-    while frame is not None:
-        digits = extract_digits(frame)
-        print(digits)
+        result = []
+        responses = []
+
         frame = vc.read_frame_local()
+        while frame is not None:
+            digits, response = extract_digits(frame)
+            result.append(digits)
+            responses.append(response)
+            frame = vc.read_frame_local()
+
+        result_name = mp4.split(".")[0]
+        result = [",".join(line) for line in result]
+        result = "\n".join(result)
+
+        with open(f'{result_name}.csv', 'w') as output:
+            output.write(result)
+
+        with open(f'{result_name}.json.csv', 'w') as raw_output:
+            raw_output.write("\n".join(responses))
+
 
 
 if __name__ == "__main__":
