@@ -4,6 +4,6 @@ Retreive data displayed by a regular power meter, using a webcam/videostream, or
 
 ## Setup
 
-## Running
+## Running it 
 
 ## Testing
