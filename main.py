@@ -5,11 +5,13 @@ import requests
 import os
 import pathlib
 import argparse
+import json
 from io import BytesIO
 from PIL import Image
 from video_capture import VideoCapture
 from google.cloud import vision_v1
 from google.cloud.vision_v1 import types
+from google.protobuf.json_format import MessageToDict
 
 # Replace these with your own values
 IP_WEBCAM_URL = os.environ.get('IP_WEBCAM_URL')
@@ -43,11 +45,11 @@ def extract_digits(image, grayscale=False):
         response = client.text_detection(image=image)
 
         # Extract the detected text
-        print(response)
+        # print(response)
         texts = response.text_annotations
         extracted_digits = [text.description for text in texts]
 
-        return extracted_digits, response
+        return extracted_digits, MessageToDict(response._pb)
     else:
         print('Invalid size for the cropped image. Check ROI coordinates.')
 
@@ -184,14 +186,14 @@ def generate_benchmarks(grayscale=False, crop=False):
             frame = vc.read_frame_local()
 
         result_name = mp4.split('.')[0]
-        result = [','.join(line) for line in result]
+        result = ['|'.join(line) for line in result]
         result = '\n'.join(result)
 
-        with open(f'/results/crop_{crop}/grayscale_{grayscale}/{result_name}.csv', 'w') as output:
+        with open(f'./results/crop_{crop}/grayscale_{grayscale}/{result_name}.csv', 'w') as output:
             output.write(result)
 
-        with open(f'/results/crop_{crop}/grayscale_{grayscale}/{result_name}.json.csv', 'w') as raw_output:
-            raw_output.write(str(responses))
+        with open(f'./results/crop_{crop}/grayscale_{grayscale}/{result_name}.json.csv', 'w') as raw_output:
+            json.dump(responses, raw_output, indent=2)
 
 
 def main():

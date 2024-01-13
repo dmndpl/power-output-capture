@@ -18,6 +18,7 @@ class VideoCapture():
     fps = None
 
     def __init__(self, path, crop=False, roi_start=None, roi_end=None):
+        logging.info(f'File at: {path}')
         self.path = path
 
         # We can either specify the cropping, use the crop wizard, or not crop at all
