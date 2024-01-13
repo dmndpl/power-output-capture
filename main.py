@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+
 import cv2
 import requests
 import os
 import pathlib
+import argparse
 from io import BytesIO
 from PIL import Image
 from video_capture import VideoCapture
@@ -9,9 +12,9 @@ from google.cloud import vision_v1
 from google.cloud.vision_v1 import types
 
 # Replace these with your own values
-IP_WEBCAM_URL = os.environ.get("IP_WEBCAM_URL")
-API_KEY = os.environ.get("API_KEY")
-CREDS_PATH = os.environ.get("CREDS_PATH")
+IP_WEBCAM_URL = os.environ.get('IP_WEBCAM_URL')
+API_KEY = os.environ.get('API_KEY')
+CREDS_PATH = os.environ.get('CREDS_PATH')
 
 # TODO to revisit these
 IMAGE_CAPTURE_INTERVAL = 1 # 6 in seconds
@@ -43,7 +46,7 @@ def extract_digits(image):
 
         return extracted_digits, response
     else:
-        print("Invalid size for the cropped image. Check ROI coordinates.")
+        print('Invalid size for the cropped image. Check ROI coordinates.')
 
 
 def extract_from_stream(extraction):
@@ -67,66 +70,66 @@ def extract_from_stream(extraction):
     cap.release()
 
 data_list = [
-    "17/12/2823",
-    "1/12/2923",
-    "18:21",
-    "Pro",
-    "096,16",
-    "004948",
-    "000,64",
-    "000,64",
-    "001140",
-    "002163",
-    "210022132",
-    "ABR",
-    "7/12/2023",
-    "1/12/2023",
-    "18:22",
-    "008080",
-    "096,16",
-    "004948",
-    "000,64",
-    "000,64",
-    "001140",
-    "092163",
-    "210022132",
-    "ABR",
-    "7/12/2023",
-    "2/12/2023",
-    "18:23",
-    "008080",
-    "096,16",
-    "004948",
-    "000,64",
-    "000,64",
-    "001140",
-    "092163",
-    "210022132",
-    "ABR",
-    "7/12/2023",
-    "7/12/2023",
-    "18:24",
-    "008080",
-    "096,16",
-    "004948",
-    "000,64",
-    "000,64",
-    "001140",
-    "092163",
-    "210022132",
-    "ARR",
-    "7/12/2923",
-    "27/12/2023",
-    "18:25",
-    "Pro", 
-    "096,16",
-    "004948",
-    "000,64",
-    "000,64",
-    "001140",
-    "002163",
-    "10022132",
-    "ABR"
+    '17/12/2823',
+    '1/12/2923',
+    '18:21',
+    'Pro',
+    '096,16',
+    '004948',
+    '000,64',
+    '000,64',
+    '001140',
+    '002163',
+    '210022132',
+    'ABR',
+    '7/12/2023',
+    '1/12/2023',
+    '18:22',
+    '008080',
+    '096,16',
+    '004948',
+    '000,64',
+    '000,64',
+    '001140',
+    '092163',
+    '210022132',
+    'ABR',
+    '7/12/2023',
+    '2/12/2023',
+    '18:23',
+    '008080',
+    '096,16',
+    '004948',
+    '000,64',
+    '000,64',
+    '001140',
+    '092163',
+    '210022132',
+    'ABR',
+    '7/12/2023',
+    '7/12/2023',
+    '18:24',
+    '008080',
+    '096,16',
+    '004948',
+    '000,64',
+    '000,64',
+    '001140',
+    '092163',
+    '210022132',
+    'ARR',
+    '7/12/2923',
+    '27/12/2023',
+    '18:25',
+    'Pro', 
+    '096,16',
+    '004948',
+    '000,64',
+    '000,64',
+    '001140',
+    '002163',
+    '10022132',
+    'ABR'
 ]
 
 def stream_to_rows(stream):
@@ -134,7 +137,7 @@ def stream_to_rows(stream):
     row = []
     start = False
 
-    LINE_BREAKS = ["ABR", "ARR"]
+    LINE_BREAKS = ['ABR', 'ARR']
 
     # TODO state machine, to sanitise the values and have the correct values at the correct position as we go.
     for item in stream:
@@ -157,7 +160,7 @@ def parse_text(text):
 
     return text[0]
 
-def main():
+def generate_benchamrks(grayscale = False):
     mp4_files = [file for file in os.listdir() if os.path.isfile(file) and pathlib.Path(file).suffix == '.mp4']
     for mp4 in mp4_files:
         vc = VideoCapture(path=mp4)
@@ -172,19 +175,32 @@ def main():
             responses.append(response)
             frame = vc.read_frame_local()
 
-        result_name = mp4.split(".")[0]
-        result = [",".join(line) for line in result]
-        result = "\n".join(result)
+        result_name = mp4.split('.')[0]
+        result = [','.join(line) for line in result]
+        result = '\n'.join(result)
 
         with open(f'{result_name}.csv', 'w') as output:
             output.write(result)
 
         with open(f'{result_name}.json.csv', 'w') as raw_output:
-            raw_output.write("\n".join(responses))
+            raw_output.write(str(responses))
 
+def main():
+    parser = argparse.ArgumentParser(description='Start capturing meter readings from a live recording, or locally stored mp4 file.')
+    parser.add_argument('method', choices=['generate_benchmarks', 'start_capture'], help='')
+    parser.add_argument('--grayscale', '-g', action='store_false', help='Toggle grayscale on')
+    parser.add_argument('--crop', '-c', action='store_false', help='Toggle cropping on')
 
+    args = parser.parse_args()
 
-if __name__ == "__main__":
+    if args.method == 'generate_benchmarks':
+        generate_benchamrks(grayscale=args.grayscale, crop=args.crop)
+    elif args.method == 'start_capture':
+        start_capture()
+    else:
+        pass  
+
+if __name__ == '__main__':
     # TODO Read stream or frames from video, and write result as array somewhere as aprocess
     # TODO Other process reads it and parses it, writes it to another file
     main()
