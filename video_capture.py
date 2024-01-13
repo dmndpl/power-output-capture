@@ -16,15 +16,42 @@ class VideoCapture():
     total_frames = None
     fps = None
 
-    def __init__(self, path, roi_start=None, roi_end=None):
+    def __init__(self, path, crop=False, roi_start=None, roi_end=None):
         self.path = path
 
-        if not roi_start or not roi_end:
+        # We can either specify the cropping, use the crop wizard, or not crop at all
+        # If we don't want to crop, we'll set the crop factor as the whole image. 
+        # If we want to crop, and the crop factors are not set, we'll use the wizard
+        # else we assume crop factors were provided
+        if not crop:
+            self.roi_selected = False
+            logging.info("Using uncropped capture")
+            self.roi_start, self.roi_end = (0,0), self._get_roi_end()
+            self.roi_selected = True
+        elif not roi_start or not roi_end:
             self.roi_selected = False
             logging.info("Init cropping wizard")
             self._save_crop_factor()
         else:
+            logging.info("Using specified crop factor")
             self.roi_start, self.roi_end, self.roi_selected = roi_start, roi_end, True
+
+    def _get_roi_end(self):
+        # Open the video file
+        cap = cv2.VideoCapture(self.path)
+
+        # Check if the file is opened successfully
+        if not cap.isOpened():
+            logging.exception("Error opening video file")
+            exit()
+
+        # Read the first frame
+        _, image = cap.read()
+        height, width, _ = image.shape
+
+        logging.info(f'Height:{height}, Width: {width}')
+
+        return (width, height)
 
     def _save_crop_factor(self):
         # Mouse callback function

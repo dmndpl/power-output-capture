@@ -1,4 +1,5 @@
 env_var.sh
 *.json
 *.mp4
+*.csv
 __pycache__

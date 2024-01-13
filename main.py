@@ -17,8 +17,8 @@ API_KEY = os.environ.get('API_KEY')
 CREDS_PATH = os.environ.get('CREDS_PATH')
 
 # TODO to revisit these
-IMAGE_CAPTURE_INTERVAL = 1 # 6 in seconds
-NUM_READINGS_PER_BURST = 1 # 10
+IMAGE_CAPTURE_INTERVAL = 1  # 6 in seconds
+NUM_READINGS_PER_BURST = 1  # 10
 NUM_BURSTS_PER_HOUR = 1
 
 SECONDS_TO_SKIP = 5
@@ -26,11 +26,14 @@ SECONDS_TO_SKIP = 5
 # Initialize the Google Cloud Vision API client
 client = vision_v1.ImageAnnotatorClient.from_service_account_file(CREDS_PATH)
 
-def extract_digits(image):
+
+def extract_digits(image, grayscale=False):
     # Check if the image has a valid size
     if image.shape[0] > 0 and image.shape[1] > 0:
         # Convert the image to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        image = gray if grayscale else image
 
         # Perform OCR using Google Cloud Vision API
         _, encoded_image = cv2.imencode('.jpg', image)
@@ -68,6 +71,7 @@ def extract_from_stream(extraction):
 
     # Release the video capture object
     cap.release()
+
 
 data_list = [
     '17/12/2823',
@@ -121,7 +125,7 @@ data_list = [
     '7/12/2923',
     '27/12/2023',
     '18:25',
-    'Pro', 
+    'Pro',
     '096,16',
     '004948',
     '000,64',
@@ -131,6 +135,7 @@ data_list = [
     '10022132',
     'ABR'
 ]
+
 
 def stream_to_rows(stream):
     rows = []
@@ -152,6 +157,7 @@ def stream_to_rows(stream):
 
     return rows
 
+
 def parse_text(text):
     return text
     # TODO there's an edge case where it only sees the Pro, not the whole url, so we end up extracting the PRO instead of the value
@@ -160,17 +166,19 @@ def parse_text(text):
 
     return text[0]
 
-def generate_benchamrks(grayscale = False):
-    mp4_files = [file for file in os.listdir() if os.path.isfile(file) and pathlib.Path(file).suffix == '.mp4']
+
+def generate_benchmarks(grayscale=False, crop=False):
+    mp4_files = [file for file in os.listdir() if os.path.isfile(
+        file) and pathlib.Path(file).suffix == '.mp4']
     for mp4 in mp4_files:
-        vc = VideoCapture(path=mp4)
+        vc = VideoCapture(path=mp4, crop=crop)
 
         result = []
         responses = []
 
         frame = vc.read_frame_local()
         while frame is not None:
-            digits, response = extract_digits(frame)
+            digits, response = extract_digits(frame, grayscale)
             result.append(digits)
             responses.append(response)
             frame = vc.read_frame_local()
@@ -179,26 +187,32 @@ def generate_benchamrks(grayscale = False):
         result = [','.join(line) for line in result]
         result = '\n'.join(result)
 
-        with open(f'{result_name}.csv', 'w') as output:
+        with open(f'/results/crop_{crop}/grayscale_{grayscale}/{result_name}.csv', 'w') as output:
             output.write(result)
 
-        with open(f'{result_name}.json.csv', 'w') as raw_output:
+        with open(f'/results/crop_{crop}/grayscale_{grayscale}/{result_name}.json.csv', 'w') as raw_output:
             raw_output.write(str(responses))
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Start capturing meter readings from a live recording, or locally stored mp4 file.')
-    parser.add_argument('method', choices=['generate_benchmarks', 'start_capture'], help='')
-    parser.add_argument('--grayscale', '-g', action='store_false', help='Toggle grayscale on')
-    parser.add_argument('--crop', '-c', action='store_false', help='Toggle cropping on')
+    parser = argparse.ArgumentParser(
+        description='Start capturing meter readings from a live recording, or locally stored mp4 file.')
+    parser.add_argument('method', choices=[
+                        'generate_benchmarks', 'start_capture'], help='')
+    parser.add_argument('--grayscale', '-g',
+                        action='store_true', help='Toggle grayscale on')
+    parser.add_argument('--crop', '-c', action='store_true',
+                        help='Toggle cropping on')
 
     args = parser.parse_args()
 
     if args.method == 'generate_benchmarks':
-        generate_benchamrks(grayscale=args.grayscale, crop=args.crop)
+        generate_benchmarks(grayscale=args.grayscale, crop=args.crop)
     elif args.method == 'start_capture':
         start_capture()
     else:
-        pass  
+        pass
+
 
 if __name__ == '__main__':
     # TODO Read stream or frames from video, and write result as array somewhere as aprocess
