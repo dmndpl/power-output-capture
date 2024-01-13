@@ -5,5 +5,6 @@ Retreive data displayed by a regular power meter, using a webcam/videostream, or
 ## Setup
 
 ## Running it 
+`main.py [-h] [--grayscale] [--crop] {generate_benchmarks,start_capture}`
 
 ## Testing
