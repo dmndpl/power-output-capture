@@ -1,1 +1,9 @@
-Given either a locally storred .mp4, or an IP webcam stream, it will use various image to text recognition algorithms to execute a meter reading. It relies on a bunch of credentials served as either local .json files (not present), or environment variables.
+# Power Output Capture
+
+Retreive data displayed by a regular power meter, using a webcam/videostream, or locally stored .mp4 files.
+
+## Setup
+
+## Running
+
+## Testing
